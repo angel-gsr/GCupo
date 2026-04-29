@@ -4,6 +4,7 @@ export type SubjectRecord = {
   clave: string;
   nombre: string;
   creditos: number;
+  area: string;
   semestre: string;
   prerrequisitos: string[];
 };

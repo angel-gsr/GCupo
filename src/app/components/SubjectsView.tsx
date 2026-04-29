@@ -63,7 +63,7 @@ export function SubjectsView() {
   );
 
   const filteredMaterias = materias.filter((materia) => {
-    const matchesSearch = `${materia.nombre} ${materia.clave} ${materia.semestre}`
+    const matchesSearch = `${materia.nombre} ${materia.clave} ${materia.semestre} ${materia.area}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesSemestre = selectedSemestre === 'Todos' || materia.semestre === selectedSemestre;
@@ -126,6 +126,7 @@ export function SubjectsView() {
 
   const totalCreditos = filteredMaterias.reduce((sum, materia) => sum + materia.creditos, 0);
   const promedioCreditos = filteredMaterias.length > 0 ? totalCreditos / filteredMaterias.length : 0;
+  const totalAreas = new Set(filteredMaterias.map((materia) => materia.area)).size;
 
   return (
     <div>
@@ -149,7 +150,7 @@ export function SubjectsView() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Buscar materia por nombre, clave o semestre..."
+              placeholder="Buscar materia por nombre, clave, semestre o area..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
@@ -196,8 +197,8 @@ export function SubjectsView() {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Créditos totales</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{totalCreditos}</p>
+              <p className="text-sm text-gray-600">Areas</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{totalAreas}</p>
             </div>
             <GraduationCap className="text-green-500" size={24} />
           </div>
@@ -205,8 +206,8 @@ export function SubjectsView() {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Créditos promedio</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{promedioCreditos.toFixed(1)}</p>
+              <p className="text-sm text-gray-600">Creditos totales / promedio</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{totalCreditos} / {promedioCreditos.toFixed(1)}</p>
             </div>
             <Clock3 className="text-amber-500" size={24} />
           </div>
@@ -262,7 +263,7 @@ export function SubjectsView() {
                                   {materia.nombre}
                                 </span>
                                 <span className="block text-xs text-gray-500">
-                                  {materia.clave} · {materia.creditos} créditos
+                                  {materia.clave} · {materia.creditos} creditos · {materia.area}
                                 </span>
                               </div>
                             </div>
@@ -305,6 +306,9 @@ export function SubjectsView() {
                     <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-700">
                       {selectedMateria.semestre}
                     </span>
+                    <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">
+                      {selectedMateria.area}
+                    </span>
                   </div>
                 )}
                 {selectedMateria && selectedMateria.prerrequisitos.length > 0 && (
@@ -335,8 +339,8 @@ export function SubjectsView() {
                   <p className="text-lg font-semibold text-gray-900 mt-1">{selectedMateria.semestre}</p>
                 </div>
                 <div className="bg-white rounded-lg border border-gray-200 p-4">
-                  <p className="text-sm text-gray-600">Créditos</p>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">{selectedMateria.creditos}</p>
+                  <p className="text-sm text-gray-600">Area</p>
+                  <p className="text-lg font-semibold text-gray-900 mt-1">{selectedMateria.area}</p>
                 </div>
                 <div className="bg-white rounded-lg border border-gray-200 p-4">
                   <p className="text-sm text-gray-600">Prerrequisitos</p>

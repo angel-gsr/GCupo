@@ -21,12 +21,46 @@ let databaseInstance = null;
 
 function normalizePlanStudiesSql(sql) {
   return sql
-    .replace(/DROP DATABASE IF EXISTS plan_sistemas;\s*/gi, '')
-    .replace(/CREATE DATABASE plan_sistemas;\s*/gi, '')
-    .replace(/USE plan_sistemas;\s*/gi, '')
+    .replace(/DROP DATABASE IF EXISTS\s+\w+;\s*/gi, '')
+    .replace(/CREATE DATABASE\s+\w+;\s*/gi, '')
+    .replace(/USE\s+\w+;\s*/gi, '')
     .replace(/INT AUTO_INCREMENT PRIMARY KEY/gi, 'INTEGER PRIMARY KEY AUTOINCREMENT')
     .replace(/AUTO_INCREMENT/gi, 'AUTOINCREMENT')
-    .replace(/INSERT\s+INTO\s+prerrequisitos\s*(?=SELECT)/gi, 'INSERT INTO prerrequisitos (id_materia, id_prerrequisito) ');
+    .replace(/INSERT\s+INTO\s+prerrequisitos\s*(?=SELECT)/gi, 'INSERT INTO prerrequisitos (id_materia, id_prerrequisito) ')
+    .replace(/SELECT\s+m\.id_materia\s*,\s*p\.id_materia\s+WHERE/gi, 'SELECT m.id_materia, p.id_materia FROM materias m, materias p WHERE');
+}
+
+function getExistingSchedules(database) {
+  try {
+    return rowsFromQuery(
+      database,
+      `
+        SELECT salon, materia, profesor, dia, horaInicio, horaFin
+        FROM horarios
+      `,
+    );
+  } catch {
+    return [];
+  }
+}
+
+function createSchedulesTable(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS horarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      salon TEXT NOT NULL,
+      materia TEXT NOT NULL,
+      profesor TEXT NOT NULL,
+      dia TEXT NOT NULL,
+      horaInicio TEXT NOT NULL,
+      horaFin TEXT NOT NULL
+    );
+  `);
+}
+
+function persistDatabase(database) {
+  fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(dbPath, Buffer.from(database.export()));
 }
 
 async function getSqlJs() {
@@ -42,32 +76,53 @@ async function getDatabase() {
   }
 
   const SQL = await getSqlJs();
-  let database;
+  const planSql = fs.readFileSync(planEstudiosSqlPath, 'utf8');
+  const aulasSql = fs.readFileSync(aulasSqlPath, 'utf8');
+  const existingSchedules = [];
 
   if (fs.existsSync(dbPath)) {
-    const fileBuffer = fs.readFileSync(dbPath);
-    database = new SQL.Database(fileBuffer);
-  } else {
-    database = new SQL.Database();
-    const planSql = fs.readFileSync(planEstudiosSqlPath, 'utf8');
-    const aulasSql = fs.readFileSync(aulasSqlPath, 'utf8');
-    database.exec(normalizePlanStudiesSql(planSql));
-    database.exec(aulasSql);
-    fs.mkdirSync(dataDir, { recursive: true });
-    fs.writeFileSync(dbPath, Buffer.from(database.export()));
+    const existingDb = new SQL.Database(fs.readFileSync(dbPath));
+    existingSchedules.push(...getExistingSchedules(existingDb));
+    existingDb.close();
   }
 
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS horarios (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      salon TEXT NOT NULL,
-      materia TEXT NOT NULL,
-      profesor TEXT NOT NULL,
-      dia TEXT NOT NULL,
-      horaInicio TEXT NOT NULL,
-      horaFin TEXT NOT NULL
+  const database = new SQL.Database();
+  database.exec(normalizePlanStudiesSql(planSql));
+  database.exec(aulasSql);
+  createSchedulesTable(database);
+
+  if (existingSchedules.length > 0) {
+    const insertSchedule = database.prepare(
+      `
+        INSERT INTO horarios (salon, materia, profesor, dia, horaInicio, horaFin)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `,
     );
-  `);
+
+    try {
+      database.exec('BEGIN TRANSACTION');
+
+      existingSchedules.forEach((schedule) => {
+        insertSchedule.run([
+          schedule.salon,
+          schedule.materia,
+          schedule.profesor,
+          schedule.dia,
+          schedule.horaInicio,
+          schedule.horaFin,
+        ]);
+      });
+
+      database.exec('COMMIT');
+    } catch (error) {
+      database.exec('ROLLBACK');
+      throw error;
+    } finally {
+      insertSchedule.free();
+    }
+  }
+
+  persistDatabase(database);
 
   databaseInstance = database;
   return databaseInstance;
@@ -137,13 +192,15 @@ app.get('/api/subjects', async (_request, response) => {
           m.clave,
           m.nombre,
           m.creditos,
+          a.nombre AS area,
           s.nombre AS semestre,
           COALESCE(GROUP_CONCAT(p.nombre, ' | '), '') AS prerrequisitos
         FROM materias m
+        INNER JOIN areas a ON a.id_area = m.id_area
         INNER JOIN semestres s ON s.id_semestre = m.id_semestre
         LEFT JOIN prerrequisitos pr ON pr.id_materia = m.id_materia
         LEFT JOIN materias p ON p.id_materia = pr.id_prerrequisito
-        GROUP BY m.id_materia, m.clave, m.nombre, m.creditos, s.nombre, s.id_semestre
+        GROUP BY m.id_materia, m.clave, m.nombre, m.creditos, a.nombre, s.nombre, s.id_semestre
         ORDER BY s.id_semestre ASC, m.nombre ASC
       `,
     );
@@ -153,6 +210,7 @@ app.get('/api/subjects', async (_request, response) => {
         clave: row.clave,
         nombre: row.nombre,
         creditos: Number(row.creditos),
+        area: row.area,
         semestre: row.semestre,
         prerrequisitos: row.prerrequisitos ? String(row.prerrequisitos).split(' | ') : [],
       })),
@@ -224,8 +282,7 @@ app.post('/api/schedules', async (request, response) => {
       });
 
       database.exec('COMMIT');
-      fs.mkdirSync(dataDir, { recursive: true });
-      fs.writeFileSync(dbPath, Buffer.from(database.export()));
+      persistDatabase(database);
     } catch (error) {
       database.exec('ROLLBACK');
       throw error;
