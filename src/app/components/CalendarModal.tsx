@@ -17,7 +17,7 @@ const horasDelDia = [
   '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
 ];
 
-const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 export function CalendarModal({ salon, onClose, onAddSchedule }: CalendarModalProps) {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -28,6 +28,7 @@ export function CalendarModal({ salon, onClose, onAddSchedule }: CalendarModalPr
   const [selectedDias, setSelectedDias] = useState<string[]>([]);
   const [horaInicio, setHoraInicio] = useState('');
   const [horaFin, setHoraFin] = useState('');
+  const [cupo, setCupo] = useState('30');
   const [successData, setSuccessData] = useState<{
     salon: string;
     profesor: string;
@@ -65,6 +66,7 @@ export function CalendarModal({ salon, onClose, onAddSchedule }: CalendarModalPr
     Miércoles: [],
     Jueves: [],
     Viernes: [],
+    Sábado: [],
   };
 
   const getEventAtTime = (dia: string, hora: string): CalendarEvent | null => {
@@ -92,6 +94,7 @@ export function CalendarModal({ salon, onClose, onAddSchedule }: CalendarModalPr
       dias: selectedDias,
       horaInicio,
       horaFin,
+      cupo: Number(cupo),
     };
 
     createSchedules(
@@ -99,6 +102,7 @@ export function CalendarModal({ salon, onClose, onAddSchedule }: CalendarModalPr
         salon,
         profesor: selectedProfesor,
         materia: selectedMateria,
+        cupo: Number(cupo),
         dia,
         horaInicio,
         horaFin,
@@ -113,6 +117,7 @@ export function CalendarModal({ salon, onClose, onAddSchedule }: CalendarModalPr
         setSelectedDias([]);
         setHoraInicio('');
         setHoraFin('');
+        setCupo('30');
       })
       .catch((error) => {
         console.error('Error saving schedule', error);
@@ -224,6 +229,19 @@ export function CalendarModal({ salon, onClose, onAddSchedule }: CalendarModalPr
                     <option key={hora} value={hora}>{hora}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Cupo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cupo</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={cupo}
+                  onChange={(e) => setCupo(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  placeholder="Ej. 30"
+                />
               </div>
             </div>
 

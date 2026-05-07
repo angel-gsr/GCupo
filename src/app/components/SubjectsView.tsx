@@ -3,6 +3,7 @@ import { Search, BookOpen, GraduationCap, Layers3, Clock3, Users } from 'lucide-
 import { maestros, calendariosPorSalon } from './data';
 import { getSchedules, getSubjects, type SubjectRecord } from '../lib/api';
 import { buildCalendariosFromSource } from '../lib/schedules';
+import { includesNormalized } from '../lib/text';
 
 export function SubjectsView() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,9 +64,10 @@ export function SubjectsView() {
   );
 
   const filteredMaterias = materias.filter((materia) => {
-    const matchesSearch = `${materia.nombre} ${materia.clave} ${materia.semestre} ${materia.area}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const matchesSearch = includesNormalized(
+      `${materia.nombre} ${materia.clave} ${materia.semestre} ${materia.area}`,
+      searchTerm,
+    );
     const matchesSemestre = selectedSemestre === 'Todos' || materia.semestre === selectedSemestre;
 
     return matchesSearch && matchesSemestre;
@@ -125,7 +127,7 @@ export function SubjectsView() {
     : [];
 
   const totalCreditos = filteredMaterias.reduce((sum, materia) => sum + materia.creditos, 0);
-  const promedioCreditos = filteredMaterias.length > 0 ? totalCreditos / filteredMaterias.length : 0;
+  const promedioCreditos = filteredMaterias.length > 0 ? Math.round(totalCreditos / filteredMaterias.length) : 0;
   const totalAreas = new Set(filteredMaterias.map((materia) => materia.area)).size;
 
   return (
@@ -146,15 +148,18 @@ export function SubjectsView() {
       {/* Search Bar */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Buscar materia por nombre, clave, semestre o area..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-            />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Buscar materia por nombre, clave, semestre o área..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+              />
+            </div>
           </div>
 
           <div>
@@ -207,7 +212,7 @@ export function SubjectsView() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Creditos totales / promedio</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{totalCreditos} / {promedioCreditos.toFixed(1)}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{totalCreditos} / {promedioCreditos}</p>
             </div>
             <Clock3 className="text-amber-500" size={24} />
           </div>

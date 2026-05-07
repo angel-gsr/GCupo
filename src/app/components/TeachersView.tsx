@@ -2,6 +2,7 @@ import { GraduationCap, CheckCircle, XCircle, Mail, Phone, Calendar, Plus, Searc
 import { maestros } from './data';
 import { useState } from 'react';
 import { TeacherCalendarModal } from './TeacherCalendarModal';
+import { includesNormalized } from '../lib/text';
 
 interface TeachersViewProps {
   onCreateScheduleForTeacher?: (teacherId: string, teacherName: string) => void;
@@ -13,21 +14,17 @@ export function TeachersView({ onCreateScheduleForTeacher }: TeachersViewProps) 
   
   const maestrosDisponibles = maestros.filter(m => m.disponible);
 
-  // Filtrar maestros por búsqueda (nombre o materias)
   const filteredMaestros = maestros.filter(maestro => {
-    if (!searchTerm) return true;
-    
-    const searchLower = searchTerm.toLowerCase();
-    const nombreMatch = maestro.nombre.toLowerCase().includes(searchLower);
-    const materiaMatch = maestro.materias.some(m => m.toLowerCase().includes(searchLower));
-    
-    return nombreMatch || materiaMatch;
+    return includesNormalized(
+      `${maestro.nombre} ${maestro.departamento} ${maestro.especialidad} ${maestro.materias.join(' ')}`,
+      searchTerm,
+    );
   });
 
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Maestros Disponibles</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Docentes</h2>
         <p className="text-sm text-gray-600 mt-1">Profesores y sus materias por departamento</p>
       </div>
 
@@ -37,7 +34,7 @@ export function TeachersView({ onCreateScheduleForTeacher }: TeachersViewProps) 
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Buscar por nombre de maestro o materia..."
+            placeholder="Buscar por nombre, área, especialidad o materia..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, User, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Teacher } from '../types';
+import { includesNormalized } from '../../lib/text';
 
 interface SelectTeacherStepProps {
   maestros: Teacher[];
@@ -19,8 +20,11 @@ export function SelectTeacherStep({
 }: SelectTeacherStepProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredMaestros = maestros.filter(maestro =>
-    maestro.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMaestros = maestros.filter((maestro) =>
+    includesNormalized(
+      `${maestro.nombre} ${maestro.departamento} ${maestro.especialidad} ${maestro.materias.join(' ')}`,
+      searchTerm,
+    ),
   );
 
   const handleTeacherSelect = (teacher: Teacher) => {

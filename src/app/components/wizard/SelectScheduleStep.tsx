@@ -4,6 +4,7 @@ import { Classroom, Teacher, TimeSlot, CalendarData, CalendarEvent } from '../ty
 import { calendariosPorSalon } from '../data';
 import { getSchedules } from '../../lib/api';
 import { buildCalendariosFromSource } from '../../lib/schedules';
+import { includesNormalized } from '../../lib/text';
 
 interface SelectScheduleStepProps {
   salones: Classroom[];
@@ -15,7 +16,7 @@ interface SelectScheduleStepProps {
   materia: string;
 }
 
-const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const horasDelDia = [
   '07:00', '08:00', '09:00', '10:00', '11:00', '12:00',
   '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
@@ -56,9 +57,8 @@ export function SelectScheduleStep({
     };
   }, []);
 
-  const filteredSalones = salones.filter(salon =>
-    salon.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    salon.edificio.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSalones = salones.filter((salon) =>
+    includesNormalized(`${salon.nombre} ${salon.edificio}`, searchTerm)
   );
 
   const calendario = selectedClassroom
@@ -68,6 +68,7 @@ export function SelectScheduleStep({
         Miércoles: [],
         Jueves: [],
         Viernes: [],
+        Sábado: [],
       }
     : null;
 

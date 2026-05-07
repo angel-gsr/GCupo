@@ -9,6 +9,7 @@ const emptyCalendar = (): CalendarData => ({
   Miércoles: [],
   Jueves: [],
   Viernes: [],
+  Sábado: [],
 });
 
 function normalizeStaticEvent(event: any, fallbackSalon: string): CalendarEvent {
@@ -16,6 +17,7 @@ function normalizeStaticEvent(event: any, fallbackSalon: string): CalendarEvent 
     materia: event.materia ?? event.titulo ?? '',
     codigo: event.codigo ?? event.id ?? '',
     profesor: event.profesor ?? event.maestro ?? '',
+    cupo: typeof event.cupo === 'number' ? event.cupo : undefined,
     horaInicio: event.horaInicio ?? '',
     horaFin: event.horaFin ?? '',
   };
@@ -47,6 +49,7 @@ export function buildCalendariosFromSource(
       materia: schedule.materia,
       codigo: schedule.materia,
       profesor: schedule.profesor,
+      cupo: schedule.cupo,
       horaInicio: schedule.horaInicio,
       horaFin: schedule.horaFin,
     };

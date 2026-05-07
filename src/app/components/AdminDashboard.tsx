@@ -10,7 +10,7 @@ import logoUdlap from '@/assets/92775d04c7cc079b5a7d99cfa46440040369fda4.png';
 type Tab = 'salones' | 'maestros' | 'materias';
 
 export function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<Tab>('salones');
+  const [activeTab, setActiveTab] = useState<Tab>('materias');
   const [showCreateSchedule, setShowCreateSchedule] = useState(false);
   const [preselectedTeacher, setPreselectedTeacher] = useState<{ id: string; name: string } | null>(null);
   const navigate = useNavigate();
@@ -79,26 +79,6 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <nav className="flex gap-8">
               <button
-                onClick={() => setActiveTab('salones')}
-                className={`py-4 px-2 border-b-2 font-medium transition-colors ${
-                  activeTab === 'salones'
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                }`}
-              >
-                Salones
-              </button>
-              <button
-                onClick={() => setActiveTab('maestros')}
-                className={`py-4 px-2 border-b-2 font-medium transition-colors ${
-                  activeTab === 'maestros'
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                }`}
-              >
-                Maestros Disponibles
-              </button>
-              <button
                 onClick={() => setActiveTab('materias')}
                 className={`py-4 px-2 border-b-2 font-medium transition-colors ${
                   activeTab === 'materias'
@@ -108,10 +88,30 @@ export function AdminDashboard() {
               >
                 Materias
               </button>
+              <button
+                onClick={() => setActiveTab('maestros')}
+                className={`py-4 px-2 border-b-2 font-medium transition-colors ${
+                  activeTab === 'maestros'
+                    ? 'border-orange-500 text-orange-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                }`}
+              >
+                Docentes
+              </button>
+              <button
+                onClick={() => setActiveTab('salones')}
+                className={`py-4 px-2 border-b-2 font-medium transition-colors ${
+                  activeTab === 'salones'
+                    ? 'border-orange-500 text-orange-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                }`}
+              >
+                Aulas
+              </button>
             </nav>
             <button
               onClick={() => setShowCreateSchedule(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium my-2"
+              className="flex items-center gap-3 px-6 py-3 text-base bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors font-semibold my-2 shadow-sm"
             >
               <Plus size={20} />
               Crear un nuevo horario

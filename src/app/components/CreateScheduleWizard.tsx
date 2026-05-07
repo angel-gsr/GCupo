@@ -18,9 +18,9 @@ export function CreateScheduleWizard({ onClose, preselectedTeacher }: CreateSche
   const [selectedMateria, setSelectedMateria] = useState<string>('');
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<TimeSlot[]>([]);
-  const [salones, setSalones] = useState<Classroom[]>([]);
-  const [isLoadingSalones, setIsLoadingSalones] = useState(true);
+  const [salones, setSalones] = useState<Classroom[]>(staticSalones);
   const [salonesError, setSalonesError] = useState('');
+  const [isLoadingSalones, setIsLoadingSalones] = useState(true);
   const [saveError, setSaveError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 

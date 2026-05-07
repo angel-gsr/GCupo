@@ -5,6 +5,7 @@ import { calendariosPorSalon } from './data';
 import { CalendarData, Classroom } from './types';
 import { getClassrooms, getSchedules } from '../lib/api';
 import { buildCalendariosFromSource } from '../lib/schedules';
+import { includesNormalized } from '../lib/text';
 
 export function ClassroomsView() {
   const [selectedSalon, setSelectedSalon] = useState<string | null>(null);
@@ -63,7 +64,7 @@ export function ClassroomsView() {
     };
   }, []);
 
-  const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+  const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const horasDelDia = [
     '07:00', '08:00', '09:00', '10:00', '11:00', '12:00',
     '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00',
@@ -71,9 +72,7 @@ export function ClassroomsView() {
 
   const secciones = Array.from(new Set(salones.map((s) => s.nombre.split('-')[0])));
   const equipamientos = Array.from(new Set(salones.flatMap((s) => s.equipamiento)));
-  const capacidadesDisponibles = Array.from(new Set(salones.map((s) => s.capacidad))).sort(
-    (a, b) => a - b,
-  );
+  const capacidadesDisponibles = [20, 30, 40, 50, 120];
 
   const hasActiveFilters =
     Boolean(searchTerm) ||
@@ -112,7 +111,7 @@ export function ClassroomsView() {
   };
 
   const filteredSalones = salones.filter((salon) => {
-    if (searchTerm && !salon.nombre.toLowerCase().includes(searchTerm.toLowerCase())) {
+    if (!includesNormalized(`${salon.nombre} ${salon.edificio}`, searchTerm)) {
       return false;
     }
 
@@ -130,7 +129,7 @@ export function ClassroomsView() {
       }
     }
 
-    if (selectedCapacidad && salon.capacidad !== Number(selectedCapacidad)) {
+    if (selectedCapacidad && salon.capacidad < Number(selectedCapacidad)) {
       return false;
     }
 
@@ -221,7 +220,7 @@ export function ClassroomsView() {
         </div>
 
         <div className="mb-4">
-          <label className="text-sm font-medium text-gray-700 mb-2 block">Capacidad</label>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">Capacidad mínima</label>
           <select
             value={selectedCapacidad}
             onChange={(e) => setSelectedCapacidad(e.target.value)}
@@ -230,12 +229,12 @@ export function ClassroomsView() {
             <option value="">Todas las capacidades</option>
             {capacidadesDisponibles.map((capacidad) => (
               <option key={capacidad} value={capacidad}>
-                {capacidad} estudiantes
+                {capacidad}+ estudiantes
               </option>
             ))}
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Capacidades reales disponibles en el inventario de salones.
+            El filtro usa umbrales de cupo para que el salto sea más racional.
           </p>
         </div>
 

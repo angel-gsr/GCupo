@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { LogIn, User, Lock } from 'lucide-react';
 import logoUdlap from '@/assets/92775d04c7cc079b5a7d99cfa46440040369fda4.png';
+import { loginUser } from '../lib/api';
 
 export function Login() {
-  const [username, setUsername] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -19,16 +20,23 @@ export function Login() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Simple validation - en producción esto sería contra un backend
-    if (username === 'admin' && password === 'admin') {
-      // Guardar sesión
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('username', username);
-      navigate('/admin');
-    } else {
-      setError('Usuario o contraseña incorrectos');
-    }
+
+    setError('');
+
+    loginUser({ id: userId, password })
+      .then((response) => {
+        if (!response.ok || !response.user) {
+          throw new Error('No se pudo iniciar sesión');
+        }
+
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('username', response.user.id);
+        localStorage.setItem('userRole', response.user.rol);
+        navigate('/admin');
+      })
+      .catch((loginError: unknown) => {
+        setError(loginError instanceof Error ? loginError.message : 'ID o contraseña incorrectos');
+      });
   };
 
   return (
@@ -51,17 +59,20 @@ export function Login() {
             {/* Username */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Usuario
+                ID de usuario
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   id="username"
                   type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                  placeholder="Ingresa tu usuario"
+                  placeholder="Ingresa tu ID de 6 dígitos"
                   required
                 />
               </div>
@@ -106,7 +117,7 @@ export function Login() {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-xs text-gray-600 text-center">
-              <span className="font-semibold">Demo:</span> Usuario: admin | Contraseña: admin
+              <span className="font-semibold">Demo:</span> IDs 181266, 180892, 177941, 180593, 180293
             </p>
           </div>
         </div>

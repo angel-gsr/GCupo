@@ -15,7 +15,7 @@ const horasDelDia = [
   '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
 ];
 
-const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 export function TeacherCalendarModal({ teacherName, onClose }: TeacherCalendarModalProps) {
   const [calendarios, setCalendarios] = useState(calendariosPorSalon);
@@ -50,6 +50,7 @@ export function TeacherCalendarModal({ teacherName, onClose }: TeacherCalendarMo
       Miércoles: [],
       Jueves: [],
       Viernes: [],
+      Sábado: [],
     };
 
     Object.entries(calendarios).forEach(([salon, calendario]) => {

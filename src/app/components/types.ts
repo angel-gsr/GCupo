@@ -25,6 +25,7 @@ export interface CalendarEvent {
   materia: string;
   codigo: string;
   profesor: string;
+  cupo?: number;
   horaInicio: string;
   horaFin: string;
 }
@@ -35,6 +36,7 @@ export interface CalendarData {
   Miércoles: CalendarEvent[];
   Jueves: CalendarEvent[];
   Viernes: CalendarEvent[];
+  Sábado: CalendarEvent[];
 }
 
 export interface TimeSlot {
